@@ -71,4 +71,71 @@ test_that("filter_by_agency_id", {
   result <- filter_by_agency_id(poa, "EPTC")
   expect_equal(dim(result$trips)[1], 387)
   expect_equal(dim(result$shapes)[1], 1265)
+  
+  sp <- read_gtfs(system.file("extdata/saopaulo.zip", package="gtfs2gps"))
+
+  result <- filter_by_agency_id(sp, 1)
+  expect_equal(dim(result$trips)[1], 233)
+  expect_equal(dim(result$shapes)[1], 94386)
+})
+
+test_that("remove_invalid", {
+  sp <- read_gtfs(system.file("extdata/saopaulo.zip", package="gtfs2gps"))
+
+  sp$shapes <- sp$shapes[-(1:80000),]
+  sp$agency$agency_id <- 2
+  
+  sp2 <- remove_invalid(sp, prompt_invalid = TRUE)
+  
+  expect_equal(length(sp$stops$stop_id), 6117)
+  expect_equal(length(sp2$stops$stop_id), 1340)
+  
+  sp3 <- remove_invalid(sp, only_essential = FALSE)
+  
+  expect_equal(length(sp3$stops$stop_id), 0)
+})
+
+test_that("filter_by_route_id", {
+  warsaw <- read_gtfs(system.file("extdata/warsaw.zip", package="gtfs2gps"))
+
+  expect_equal(dim(warsaw$trips)[1], 56)
+  expect_equal(dim(warsaw$shapes)[1], 3075)
+    
+  subset <- filter_by_route_id(warsaw, c("15", "175"))
+
+  expect(all(subset$routes$route_id %in% c("15", "175")), "invalid route_ids")
+  
+  expect_equal(dim(subset$trips)[1], 48)
+  expect_equal(dim(subset$shapes)[1], 1370)
+  
+  sp <- read_gtfs(system.file("extdata/saopaulo.zip", package="gtfs2gps"))
+
+  subset <- filter_by_route_id(sp, "N131-11")
+  
+  expect(all(subset$routes$route_id %in% "N131-11"), "invalid route_ids")
+  
+  expect_equal(dim(subset$trips)[1], 1)
+  expect_equal(dim(subset$shapes)[1], 758)
+})
+
+test_that("filter_by_route_type", {
+  warsaw <- read_gtfs(system.file("extdata/warsaw.zip", package="gtfs2gps"))
+
+  subset <- filter_by_route_type(warsaw, c(0, 3))
+
+  expect(all(subset$routes$route_type %in% c(0, 3)), "invalid route_types")
+    
+  expect_equal(dim(subset$trips)[1], 48)
+  expect_equal(dim(subset$shapes)[1], 1370)
+  
+  sp <- read_gtfs(system.file("extdata/saopaulo.zip", package="gtfs2gps"))
+  
+  sp$routes$route_type[1] <- 1
+
+  subset <- filter_by_route_type(sp, 1)
+  
+  expect(all(subset$routes$route_type %in% 1), "invalid route_types")
+  
+  expect_equal(dim(subset$trips)[1], 1)
+  expect_equal(dim(subset$shapes)[1], 583)
 })
