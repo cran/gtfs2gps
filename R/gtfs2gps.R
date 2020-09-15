@@ -3,7 +3,8 @@
 #' @description Convert GTFS data to GPS format by sampling points using a
 #' spatial resolution. This function creates additional points in order to
 #' guarantee that two points in a same trip will have at most a given
-#' distance, indicated as a spatial resolution.
+#' distance, indicated as a spatial resolution. This function uses progressr
+#' internally to show progress bars.
 #' 
 #' @param gtfs_data A path to a GTFS file to be converted to GPS, or a GTFS data
 #' represented as a list of data.tables.
@@ -13,7 +14,6 @@
 #' @param strategy Name of evaluation function to use in future parallel processing. Defaults to 
 #' "multiprocess", i.e. if multicore evaluation is supported, that will be used, otherwise
 #'  multisession evaluation will be used. Fore details, check ?future::plan().
-#' @param progress Show a progress bar. Default is TRUE.
 #' @param filepath Output file path. As default, the output is returned in R.
 #' When this argument is set, each route is saved into a file within filepath,
 #' with the name equals to its id. In this case, no output is returned.
@@ -32,10 +32,12 @@
 #'   filter_single_trip()
 #' 
 #' poa_gps <- gtfs2gps(subset)
-gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strategy = 'multiprocess', progress = TRUE, filepath = NULL, continue = FALSE){
+gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strategy = 'multiprocess', filepath = NULL, continue = FALSE){
 ###### PART 1. Load and prepare data inputs ------------------------------------
   if(continue & is.null(filepath))
     stop("Cannot use argument 'continue' without passing a 'filepath'.")
+  
+  original_gtfs_data_arg <- deparse(substitute(gtfs_data))
   
   # Unzipping and reading GTFS.zip file
   if(class(gtfs_data) == "character"){
@@ -56,7 +58,7 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
   shapes_sf <- gtfs_shapes_as_sf(gtfs_data)
 
   ###### PART 2. Analysing data type ----------------------------------------------
-  corefun <- function(shapeid){ 
+  corefun <- function(shapeid){
     if(continue){
       file <- paste0(filepath, "/", shapeid, ".txt")
       if(file.exists(file)) return(NULL)
@@ -71,15 +73,12 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
 
     # identify route id
     routeid <- gtfs_data$trips[shape_id == shapeid]$route_id[1]
-
-    # identify route type
-    routetype <- gtfs_data$routes[route_id == routeid]$route_type
     
     # get all trips linked to that route
     all_tripids <- gtfs_data$trips[shape_id == shapeid & route_id == routeid, ]$trip_id %>% unique()
 
     # nstop = number of valid stops in each trip_id
-    nstop <- gtfs_data$stop_times[trip_id %in% all_tripids, .N, by ="trip_id"]$N
+    nstop <- gtfs_data$stop_times[trip_id %chin% all_tripids, .N, by ="trip_id"]$N
 
     # Get the stops sequence with lat long linked to that route
     # each shape_id only has one stop sequence
@@ -140,10 +139,15 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
     # get shape points in high resolution
     new_stoptimes <- data.table::data.table(shape_id = new_shape$shape_id[1],
                                             id = 1:nrow(new_shape),
-                                            route_type = routetype,
                                             shape_pt_lon = sf::st_coordinates(new_shape)[,1],
                                             shape_pt_lat = sf::st_coordinates(new_shape)[,2])
     
+    # identify route type
+    if(!is.null(gtfs_data$routes)){
+      routetype <- gtfs_data$routes[route_id == routeid]$route_type
+      new_stoptimes[, "route_type"] <- routetype
+    }
+
     ## Add stops to new_stoptimes  
     new_stoptimes[stops_seq$ref, "stop_id"] <- stops_seq$stop_id
     new_stoptimes[stops_seq$ref, "stop_sequence"] <- stops_seq$stop_sequence
@@ -171,8 +175,12 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
       return(NULL)  # nocov
     }
     
-    new_stoptimes[, departure_time:= data.table::as.ITime(departure_time)]
+    new_stoptimes[, departure_time := data.table::as.ITime(departure_time)]
 
+    data.table::setcolorder(new_stoptimes, c("id", "shape_id", "trip_id", "trip_number", "route_type", 
+      "shape_pt_lon", "shape_pt_lat", "departure_time", "stop_id", "stop_sequence", "dist", "cumdist",
+      "cumtime", "speed"))
+    
     if(!is.null(filepath)){ # Write object
       data.table::fwrite(x = new_stoptimes,
              file = paste0(filepath, "/", shapeid, ".txt"))
@@ -184,33 +192,80 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
 
   ###### PART 3. Apply Core function in parallel to all shape ids------------------------------------
 
+  badShapes <- c()
+
   # all shape ids
   all_shapeids <- unique(shapes_sf$shape_id)
 
   if(parallel == FALSE){
+    tryCorefun <- function(shapeid){
+      result <- NULL
+      tryCatch({result <- corefun(shapeid)}, error = function(msg) {
+        badShapes <<- c(badShapes, shapeid) # nocov
+      })
+      
+      return(result)
+    }
+
     message(paste('Using 1 CPU core'))
-    if(progress) pbapply::pboptions(type = "txt")
 
     message("Processing the data")
-    output <- pbapply::pblapply(X = all_shapeids, FUN = corefun) %>% data.table::rbindlist()
-    
-    if(progress) pbapply::pboptions(type = "none")
+    output <- pbapply::pblapply(X = all_shapeids, FUN = tryCorefun) %>% data.table::rbindlist()
   }
   else
-  {  
-    # message("Preparing parallelization")
-    future::plan(strategy)
-    
+  {
+    p <- progressr::progressor(steps = length(all_shapeids))
+
+    tryCorefun <- function(shapeid){
+      p()
+      result <- NULL
+      tryCatch({result <- corefun(shapeid)}, error = function(msg) {
+        badShapes <<- c(badShapes, shapeid) # nocov
+      })
+      
+      return(result)
+    }
+
     # number of cores
-    cores <- data.table::getDTthreads() - 1
+    cores <- future::availableCores() - 1
     message(paste('Using', cores, 'CPU cores'))
     
+    future::plan(strategy, workers = cores)
+    
     message("Processing the data")
-    output <-  furrr::future_map( .x = all_shapeids, .f = corefun, .progress = progress, .options = furrr::future_options(packages=c('data.table', 'sf', 'magrittr', 'Rcpp', 'sfheaders', 'units'))) %>% data.table::rbindlist()
+    output <- furrr::future_map(.x = all_shapeids, .f = tryCorefun, 
+      .options = furrr::future_options(
+        packages = c('data.table', 'sf', 'magrittr', 'Rcpp', 'sfheaders', 'units'))) %>% 
+      data.table::rbindlist()
   }
 
-  if(is.null(filepath))
+  if(length(badShapes) > 0){
+    if(original_gtfs_data_arg == ".") original_gtfs_data_arg <- "<your gtfs data>" # nocov
+    
+    message(paste0("Some internal bug occurred while processing gtfs data.\n", # nocov
+                   "Please give us a feedback by creating a GitHub issue\n", # nocov
+                   "(https://github.com/ipeaGIT/gtfs2gps/issues/new)\n"), # nocov
+                   "and attaching a subset of your data created from the\n", # nocov
+                   "code below:\n", # nocov
+                   "################################################") # nocov
+    
+    ids <- paste0("ids <- c('", paste(badShapes, collapse = "', '"), "')") # nocov
+    code1 <- paste0("data <- gtfs2gps::filter_by_shape_id(", original_gtfs_data_arg, ", ids)") # nocov
+    code2 <- "gtfs2gps::write_gtfs(data, 'shapes_with_error.zip')" # nocov
+    
+    message(paste(ids, code1, code2, sep = "\n")) # nocov
+    message("################################################") # nocov
+    message("The other shapeids were properly processed.") # nocov
+  }
+
+  if(is.null(filepath)){
+    output$speed <- units::set_units(output$speed, "km/h")
+    output$dist <- units::set_units(output$dist, "m")
+    output$cumdist <- units::set_units(output$cumdist, "m")
+    output$cumtime <- units::set_units(output$cumtime, "s")
+    
     return(output)
+  }
   else
     return(NULL)
 }
