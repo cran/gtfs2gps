@@ -32,8 +32,14 @@
 #'   filter_single_trip()
 #' 
 #' poa_gps <- gtfs2gps(subset)
-gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strategy = 'multiprocess', filepath = NULL, continue = FALSE){
-###### PART 1. Load and prepare data inputs ------------------------------------
+gtfs2gps <- function(gtfs_data,
+                     spatial_resolution = 50,
+                     parallel = FALSE,
+                     strategy = 'multiprocess',
+                     filepath = NULL,
+                     continue = FALSE){
+
+  ###### PART 1. Load and prepare data inputs ------------------------------------
   if(continue & is.null(filepath))
     stop("Cannot use argument 'continue' without passing a 'filepath'.")
   
@@ -78,7 +84,7 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
     all_tripids <- gtfs_data$trips[shape_id == shapeid & route_id == routeid, ]$trip_id %>% unique()
 
     # nstop = number of valid stops in each trip_id
-    nstop <- gtfs_data$stop_times[trip_id %chin% all_tripids, .N, by ="trip_id"]$N
+    nstop <- gtfs_data$stop_times[trip_id %chin% all_tripids, .N, by = "trip_id"]$N
 
     # Get the stops sequence with lat long linked to that route
     # each shape_id only has one stop sequence
@@ -98,12 +104,11 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
     
     spatial_resolution <- units::set_units(spatial_resolution / 1000, "km")
     
-    # new faster verion using sfheaders
+    # new faster version using sfheaders
     new_shape <- subset(shapes_sf, shape_id == shapeid) %>%
       sf::st_segmentize(spatial_resolution) %>%
-      sfheaders::sf_to_df(fill = TRUE) %>%
-      sfheaders::sf_point(x = "x", y = "y", keep = TRUE)
-
+      sfheaders::sf_cast( "POINT")
+    
     # convert units of spatial resolution to meters
     spatial_resolution <- units::set_units(spatial_resolution, "m")
     
@@ -113,15 +118,9 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
                                      spatial_resolution,
                                      all_tripids[which.max(nstop)])
     
-    # Skip shape_id IF there are no snnaped stops
+    # Skip shape_id IF there are no snapped stops
     if(is.null(snapped) | length(snapped) == 0 ){
       warning(paste0("Shape '", shapeid, "' has no snapped stops. Ignoring it."),  call. = FALSE)  # nocov
-      return(NULL) # nocov
-    }
-  
-    # If there is less than two valid stops, jump this shape_id
-    if(min(nstop) < 2){
-      warning(paste0("Shape '", shapeid, "' has less than two stops. Ignoring it."),  call. = FALSE)  # nocov
       return(NULL) # nocov
     }
 
@@ -155,6 +154,8 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
 
     # calculate Distance between successive points
     new_stoptimes[, dist := rcpp_distance_haversine(shape_pt_lat, shape_pt_lon, data.table::shift(shape_pt_lat, type = "lead"), data.table::shift(shape_pt_lon, type = "lead"), tolerance = 1e10)]
+    # new_stoptimes[, dist := rcpp_distance_haversine(shape_pt_lat, shape_pt_lon, data.table::shift(shape_pt_lat, type = "lag"), data.table::shift(shape_pt_lon, type = "lag"), tolerance = 1e10)]
+    # new_stoptimes[1, dist := 0]
     new_stoptimes <- na.omit(new_stoptimes, cols = "dist")
 
     if(dim(new_stoptimes)[1] < 2){
@@ -227,10 +228,11 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
     }
 
     # number of cores
-    cores <- future::availableCores() - 1
+    cores <- max(1, future::availableCores() - 1)
     message(paste('Using', cores, 'CPU cores'))
     
-    future::plan(strategy, workers = cores)
+    oplan <- future::plan(strategy, workers = cores)
+    on.exit(future::plan(oplan), add = TRUE)
     
     message("Processing the data")
     output <- furrr::future_map(.x = all_shapeids, .f = tryCorefun, 
@@ -255,10 +257,31 @@ gtfs2gps <- function(gtfs_data, spatial_resolution = 50, parallel = FALSE, strat
     
     message(paste(ids, code1, code2, sep = "\n")) # nocov
     message("################################################") # nocov
-    message("The other shapeids were properly processed.") # nocov
+  }
+
+  total_shapes <- length(unique(gtfs_data$shapes$shape_id))
+  processed_shapes <- length(unique(output$shape_id))
+
+  if(processed_shapes < total_shapes && is.null(filepath)){
+    perc <- round(processed_shapes / total_shapes * 100, 2)
+    message(paste0(processed_shapes, " out of ", total_shapes, " shapes (", perc, "%) were properly processed."))
+  }
+
+  total_trips <- length(unique(gtfs_data$trips$trip_id))
+  processed_trips <- length(unique(output$trip_id))
+  
+  if(processed_trips < total_trips && is.null(filepath)){
+    perc <- round(processed_trips / total_trips * 100, 2)
+    message(paste0(processed_trips, " out of ", total_trips, " trips (", perc, "%) were properly processed."))
   }
 
   if(is.null(filepath)){
+    if(any(is.na(output$speed)))
+      message("Some 'speed' values are NA in the returned data")
+    
+    if(any(is.infinite(output$speed)))
+      message("Some 'speed' values are Inf in the returned data")
+    
     output$speed <- units::set_units(output$speed, "km/h")
     output$dist <- units::set_units(output$dist, "m")
     output$cumdist <- units::set_units(output$cumdist, "m")

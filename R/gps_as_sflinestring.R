@@ -21,7 +21,7 @@
 #' poa_gps_sf <- gps_as_sflinestring(poa_gps)
 gps_as_sflinestring  <- function(gps, crs = 4326){
   if(is.character(gps)){
-    dt <- data.table::fread(gps)
+    dt <- data.table::fread(gps, colClasses = list(character = c("id", "shape_id", "trip_id", "stop_id")))
   } else {
     dt <- gps
   }
@@ -42,7 +42,7 @@ gps_as_sflinestring  <- function(gps, crs = 4326){
   # Here we create a data.table indicating what are all the point ids in each interval
   list_ids <- data.table::data.table(
     interval = rep(seq_along(id0), id1 - id0 + 1),
-    id = unlist(sapply(1:length(id0), function(i) id0[i]:id1[i]))
+    id = unlist(sapply(seq_along(id0), function(i) id0[i]:id1[i]))
   )
 
   # add interval code to GPS
@@ -71,7 +71,8 @@ gps_as_sflinestring  <- function(gps, crs = 4326){
   moreThanOne <- which(as.vector(table(dt2$grp)) != 1)
   
   dt2 <- dt2[grp %in% moreThanOne, ]
-
+  dt2[, departure_time := data.table::as.ITime(departure_time)]
+  
   ## convert to linestring
   gps_sf <- sfheaders::sf_linestring(obj = dt2, 
                                               x = 'shape_pt_lon',
@@ -79,10 +80,11 @@ gps_as_sflinestring  <- function(gps, crs = 4326){
                                               linestring_id = 'grp',
                                               keep = TRUE) %>% sf::st_set_crs(crs)
 
-  # edit columns
-  gps_sf$departure_time <- data.table::as.ITime(gps_sf$departure_time)
   gps_sf$dist <- sf::st_length(gps_sf$geometry)
+  # edit columns
   gps_sf$grp <- NULL
-
+  gps_sf$cumdist <- NULL
+  gps_sf$cumtime <- NULL
+  
   return(gps_sf)
 }
