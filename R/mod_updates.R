@@ -6,7 +6,7 @@ update_freq <- function(tripid, new_stoptimes, gtfs_data, all_tripids){
     return(new_stoptimes) # nocov
   }
 
-  new_stoptimes[, "trip_number"] <- 1
+  new_stoptimes[, trip_number := 1 ]
   
   if(is.null(gtfs_data$frequencies)) return(new_stoptimes) # nocov
   
@@ -47,7 +47,7 @@ update_freq <- function(tripid, new_stoptimes, gtfs_data, all_tripids){
     nmber_of_departures <- subset(freq_temp, start_time == starttimes[1])$number_of_departures
 
     if(length(nmber_of_departures) == 0 || is.na(nmber_of_departures)){
-      warning(paste0("Trip '", tripid, "' has zero departures. Ignoring it."),  call. = FALSE) # nocov
+      message(paste0("Trip '", tripid, "' has zero departures. Ignoring it.")) # nocov
       return(NULL) # nocov
     }
 
@@ -64,15 +64,15 @@ update_freq <- function(tripid, new_stoptimes, gtfs_data, all_tripids){
     dt_list <- lapply(departure_list, update_departure_stoptimes, dt_list)
     
     # Apply function and return the stop times of all departures from that period
-    departure_stoptimes <- lapply(X = seq_along(dt_list), FUN = update_departure_stoptimes, dt_list) %>%
-      data.table::rbindlist()
+    departure_stoptimes <- lapply(X = seq_along(dt_list), FUN = update_departure_stoptimes, dt_list)
+    departure_stoptimes <- data.table::rbindlist(departure_stoptimes)
     
     #departure_stoptimes <- lapply(X = departure_list, FUN = update_departure_stoptimes) %>% data.table::rbindlist()
     return(departure_stoptimes)
   }
   
-  new_stoptimes <- lapply(starttimes, update_newstoptimes, freq_temp) %>%
-    data.table::rbindlist()
+  new_stoptimes <- lapply(starttimes, update_newstoptimes, freq_temp)
+  new_stoptimes <- data.table::rbindlist(new_stoptimes)
   
   #departure_stoptimes <- update_newstoptimes_freq(starttime)
   return(new_stoptimes)
@@ -100,7 +100,7 @@ update_dt <- function(tripid, new_stoptimes, gtfs_data, all_tripids){
   
   # ignore trip_id if original departure_time values are missing
   if(is.null(length(stop_id_ok)) == TRUE | length(stop_id_ok) == 1 | length(stop_id_ok) == 0){ 
-    warning(paste0("Trip '", tripid, "' has less than two stop_ids. Ignoring it."),  call. = FALSE) # nocov
+    message(paste0("Trip '", tripid, "' has less than two stop_ids. Ignoring it.")) # nocov
     return(NULL) # nocov
   }
     
@@ -111,10 +111,11 @@ update_dt <- function(tripid, new_stoptimes, gtfs_data, all_tripids){
   update_speeds <- function(i){
     a <- lim0[i]
     b <- lim0[i + 1]
-    new_stoptimes[a:b, speed := 3.6 * (data.table::last(cumdist) - data.table::first(cumdist)) / 
-      ifelse(data.table::last(departure_time) - data.table::first(departure_time) > 0,
-             1, 2)]#data.table::last(departure_time) - data.table::first(departure_time),
-             #data.table::last(departure_time) - data.table::first(departure_time) + 86400) ]
+    diff_departure <- new_stoptimes$departure_time[b] - new_stoptimes$departure_time[a]
+    
+    if(diff_departure < 0) diff_departure <- diff_departure + 86400 # one day in seconds
+        
+    new_stoptimes[a:b, speed := 3.6 * (data.table::last(cumdist) - data.table::first(cumdist)) / diff_departure]
   }
   
   # apply function for speed estimation
@@ -143,10 +144,10 @@ update_dt <- function(tripid, new_stoptimes, gtfs_data, all_tripids){
   new_stoptimes[, departure_time := round(departure_time[1L] + stats::lag(cumtime, 1, 0))]
 
   if(is.null(new_stoptimes)){
-    warning(paste0("Could not create stop times for trip '", tripid, "'. Ignoring it."),  call. = FALSE) # nocov
+    message(paste0("Could not create stop times for trip '", tripid, "'. Ignoring it.")) # nocov
   }
   else if(dim(new_stoptimes)[1] == 0)
-    warning(paste0("Trip '", tripid, "' has zero GPS points. Ignoring it."),  call. = FALSE) # nocov
+    message(paste0("Trip '", tripid, "' has zero GPS points. Ignoring it.")) # nocov
   
   return(new_stoptimes)
 }
