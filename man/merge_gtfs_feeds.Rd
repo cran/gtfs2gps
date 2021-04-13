@@ -7,7 +7,7 @@
 merge_gtfs_feeds(gtfs_list)
 }
 \arguments{
-\item{gtfs_list}{A list or a vector of GTFS.zip file names.}
+\item{gtfs_list}{A list of GTFS.zip files.}
 }
 \value{
 A single list of data.tables, where each index represents the respective GTFS file name.

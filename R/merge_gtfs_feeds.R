@@ -1,7 +1,7 @@
 #' @title Merge multiple GTFS feeds into a single one
 #' 
 #' @description Build a single GTFS by joinning together the elements of multiple GTFS feeds.
-#' @param gtfs_list A list or a vector of GTFS.zip file names.
+#' @param gtfs_list A list of GTFS.zip files.
 #' @return A single list of data.tables, where each index represents the respective GTFS file name.
 #' @export
 #' @examples
@@ -13,20 +13,14 @@
 #' 
 #' new_gtfs <- merge_gtfs_feeds(gtfs_list)
 merge_gtfs_feeds <- function(gtfs_list){
-  if(is.character(gtfs_list))
-     gtfs_list <- as.list(gtfs_list)
-  
   # read all fees separately
-  all_feeds <- lapply(gtfs_list, function(i){
-    message(paste0("GTFS '", i, "'"))
-    read_gtfs(i)
-  })
+  all_feeds <- lapply(gtfs_list, read_gtfs)
   
   create_new_ids <- function(i, id, files){
     values <- function(i, mfile, id)
       all_feeds[[i]][[mfile]][[id]]
     
-    ids <- as.vector(unlist(lapply(files, function(mfile) values(i, mfile, id))))
+    ids <- as.vector(unlist(sapply(files, function(mfile) values(i, mfile, id))))
     new_ids <- paste0(i, "_", seq_along(ids))
     
     for(mfile in files){  
@@ -43,7 +37,7 @@ merge_gtfs_feeds <- function(gtfs_list){
     create_new_ids(i, "route_id",   c("routes", "trips"))
     create_new_ids(i, "trip_id",    c("trips", "stop_times"))
     create_new_ids(i, "stop_id",    c("stop_times", "stops"))
-    create_new_ids(i, "service_id", c("trips", "calendar", "calendar_dates"))
+    create_new_ids(i, "service_id", c("trips", "calendar"))
     create_new_ids(i, "trip_id",    c("trips", "frequencies", "stop_times"))
   }
 
@@ -78,8 +72,6 @@ merge_gtfs_feeds <- function(gtfs_list){
   
   # 8/8 frequencies
   new_gtfs$frequencies <- lapply(X = seq_along(all_feeds), FUN = extract_list_element, 'frequencies') %>% data.table::rbindlist(fill =TRUE)
-
-  if(dim(new_gtfs$frequencies)[1] == 0) new_gtfs$frequencies <- NULL
 
   return(new_gtfs)
 }

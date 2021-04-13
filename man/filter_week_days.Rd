@@ -14,8 +14,7 @@ A filtered GTFS data.
 }
 \description{
 Filter a GTFS data read using gtfs2gps::read_gtfs(). It removes the
-trips operating only on Saturdays or Sundays. Note that it might produce
-inconsistent outputs that can be removed by using gtfs2gps::remove_invalid().
+trips operating only saturday or sunday.
 }
 \examples{
 poa <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps"))
