@@ -6,10 +6,12 @@
 \usage{
 gtfs2gps(
   gtfs_data,
-  spatial_resolution = 50,
+  spatial_resolution = 100,
   parallel = FALSE,
-  strategy = "multiprocess",
+  strategy = NULL,
   filepath = NULL,
+  compress = FALSE,
+  snap_method = "nearest2",
   continue = FALSE
 )
 }
@@ -17,39 +19,70 @@ gtfs2gps(
 \item{gtfs_data}{A path to a GTFS file to be converted to GPS, or a GTFS data
 represented as a list of data.tables.}
 
-\item{spatial_resolution}{The spatial resolution in meters. Default is 50m.}
+\item{spatial_resolution}{The spatial resolution in meters. Default is 100m.}
 
-\item{parallel}{Decides whether the function should run in parallel. Defaults to FALSE.
-When TRUE, it will use all cores available minus one.}
+\item{parallel}{Decides whether the function should run in parallel. Defaults is FALSE.
+When TRUE, it will use all cores available minus one using future::plan() with
+strategy "multisession" internally.
+Note that it is possible to create your own plan before calling gtfs2gps().
+In this case, do not use this argument.}
 
-\item{strategy}{Name of evaluation function to use in future parallel processing. Defaults to 
-"multiprocess", i.e. if multicore evaluation is supported, that will be used, otherwise
- multisession evaluation will be used. Fore details, check ?future::plan().}
+\item{strategy}{This argument is deprecated. Please use argument plan instead or
+use future::plan() directly.}
 
-\item{filepath}{Output file path. As default, the output is returned in R.
-When this argument is set, each route is saved into a file within filepath,
-with the name equals to its id. In this case, no output is returned.}
+\item{filepath}{Output file path. As default, the output is returned when gtfs2gps finishes.
+When this argument is set, each route is saved into a txt file within filepath,
+with the name equals to its id. In this case, no output is returned. See argument
+compress for another option.}
+
+\item{compress}{Argument that can be used only with filepath. When TRUE, it
+compresses the output files by saving them using rds format. Default value is FALSE.
+Note that compress guarantees that the data saved will be read in the same way as it
+was created in R. If not compress, the txt extension requires the data to be converted
+from ITime to string, and therefore they need to manually converted back to ITime to 
+be properly handled by gtfs2gps.}
+
+\item{snap_method}{The method used to snap stops to the route geometry. There
+are two available methods: `nearest1` and `nearest2`. Defaults to 
+`nearest2`. See details for more info.}
 
 \item{continue}{Argument that can be used only with filepath. When TRUE, it
-skips processing the shape identifiers that were already saved into files.
-It is useful to continue processing a GTFS file that was stopped for some
-reason. Default value is FALSE.}
+skips processing the shape identifiers that were already saved into 
+files. It is useful to continue processing a GTFS file that was stopped
+for some reason. Default value is FALSE.}
 }
 \value{
-A data.table, where each row represents a GPS point. The following columns are
-returned (units of measurement in parenthesis): dist and cumdist (meters), cumtime (seconds),
-shape_pt_lon and shape_pt_lat (degrees), speed (km/h), departure_time (hh:mm:ss), .
+A `data.table`, where each row represents a GPS point. The following 
+columns are returned (units of measurement in parenthesis): dist and cumdist 
+(meters), cumtime (seconds), shape_pt_lon and shape_pt_lat (degrees), speed 
+(km/h), departure_time (hh:mm:ss).
 }
 \description{
-Convert GTFS data to GPS format by sampling points using a
+Convert GTFS data to GPS format by sampling points using a given
 spatial resolution. This function creates additional points in order to
 guarantee that two points in a same trip will have at most a given
-distance, indicated as a spatial resolution. This function uses progressr
-internally to show progress bars.
+distance, indicated as a spatial resolution. It is possible to use future package
+to parallelize the execution (or use argument plan). This function also
+uses progressr internally to show progress bars.
+}
+\details{
+After creating geometry points for a given shape id, the `gtfs2gps()`
+function snaps the stops to the route geometry. Two strategies are implemented
+to do this. 
+- The `nearest2` method (default) triangulates the distance between each stop 
+and the two nearest points in the route geometry to decide which point the 
+stop should be snapped to. If there is any stop that is further away to the 
+route geometry  than `spatial_resolution`, the algorithm recursively doubles 
+the `spatial_resolution` to do the search/snap of all stops.
+- The `nearest1` method traverses the geometry points computing their 
+distances to the first stop. Whenever it finds a distance to the stop smaller
+than `spatial_resolution`, then the stop will be snapped to such point. The 
+algorithm then applies the same strategy to the next stop until the vector of
+stops end.
 }
 \examples{
 library(dplyr)
-poa <- read_gtfs(system.file("extdata/poa.zip", package="gtfs2gps"))
+poa <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps"))
 subset <- filter_by_shape_id(poa, "T2-1") \%>\%
   filter_single_trip()
 

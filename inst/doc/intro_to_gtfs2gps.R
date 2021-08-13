@@ -5,7 +5,7 @@
 library("gtfs2gps")
 sao <- read_gtfs(system.file("extdata/saopaulo.zip", package ="gtfs2gps"))
 names(sao)
-sao$trips
+head(sao$trips)
 
 ## -----------------------------------------------------------------------------
 library(magrittr)
@@ -24,7 +24,7 @@ box()
 write_gtfs(sao_small, "sao_small.zip")
 
 ## ---- message = FALSE---------------------------------------------------------
-  sao_gps <- gtfs2gps("sao_small.zip", parallel = FALSE, spatial_resolution = 50)
+  sao_gps <- gtfs2gps("sao_small.zip", spatial_resolution = 50)
   head(sao_gps)
 
 ## ---- message = FALSE---------------------------------------------------------
@@ -44,7 +44,7 @@ write_gtfs(sao_small, "sao_small.zip")
 ## ---- message = FALSE---------------------------------------------------------
 poa <- system.file("extdata/poa.zip", package ="gtfs2gps")
 
-poa_gps <- gtfs2gps(poa, parallel = FALSE, spatial_resolution = 50)
+poa_gps <- gtfs2gps(poa, spatial_resolution = 50)
 
 poa_gps_sflinestrig <- gps_as_sfpoints(poa_gps)
 
