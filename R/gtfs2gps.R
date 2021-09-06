@@ -83,7 +83,7 @@ gtfs2gps <- function(gtfs_data,
   original_gtfs_data_arg <- deparse(substitute(gtfs_data))
   
   # Unzipping and reading GTFS.zip file
-  if(class(gtfs_data) == "character"){
+  if(is.character(gtfs_data)){
     message(paste("Unzipping and reading", basename(gtfs_data)))
     gtfs_data <- read_gtfs(gtfszip = gtfs_data)
   }
@@ -197,7 +197,7 @@ gtfs2gps <- function(gtfs_data,
     ## Add stops to new_stoptimes  
     new_stoptimes[stops_seq$ref, stop_id := stops_seq$stop_id ]
     new_stoptimes[stops_seq$ref, stop_sequence := stops_seq$stop_sequence ]
-    new_stoptimes[stops_seq$ref, departure_time := stops_seq$departure_tim ]
+    new_stoptimes[stops_seq$ref, departure_time := stops_seq$departure_time ]
     
     # calculate Distance between successive points
     new_stoptimes[, dist := rcpp_distance_haversine(shape_pt_lat, shape_pt_lon, data.table::shift(shape_pt_lat, type = "lead"), data.table::shift(shape_pt_lon, type = "lead"), tolerance = 1e10)]
