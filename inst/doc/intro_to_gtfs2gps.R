@@ -3,42 +3,42 @@
 
 ## -----------------------------------------------------------------------------
 library("gtfs2gps")
-sao <- read_gtfs(system.file("extdata/saopaulo.zip", package ="gtfs2gps"))
-names(sao)
-head(sao$trips)
+poa <- read_gtfs(system.file("extdata/poa.zip", package ="gtfs2gps"))
+names(poa)
+head(poa$trips)
 
 ## -----------------------------------------------------------------------------
 library(magrittr)
-object.size(sao) %>% format(units = "Kb")
-sao_small <- gtfs2gps::filter_by_shape_id(sao, c(51338, 51956, 51657))
-object.size(sao_small) %>% format(units = "Kb")
+object.size(poa) %>% format(units = "Kb")
+poa_small <- gtfs2gps::filter_by_shape_id(poa, c("T2-1", "A141-1"))
+object.size(poa_small) %>% format(units = "Kb")
 
-## ----sao_small_shapes_sf, message = FALSE-------------------------------------
-sao_small_shapes_sf <- gtfs2gps::gtfs_shapes_as_sf(sao_small)
-sao_small_stops_sf <- gtfs2gps::gtfs_stops_as_sf(sao_small)
-plot(sf::st_geometry(sao_small_shapes_sf))
-plot(sf::st_geometry(sao_small_stops_sf), pch = 20, col = "red", add = TRUE)
+## ----poa_small_shapes_sf, message = FALSE-------------------------------------
+poa_small_shapes_sf <- gtfs2gps::gtfs_shapes_as_sf(poa_small)
+poa_small_stops_sf <- gtfs2gps::gtfs_stops_as_sf(poa_small)
+plot(sf::st_geometry(poa_small_shapes_sf))
+plot(sf::st_geometry(poa_small_stops_sf), pch = 20, col = "red", add = TRUE)
 box()
 
 ## ---- message = FALSE---------------------------------------------------------
-write_gtfs(sao_small, "sao_small.zip")
+write_gtfs(poa_small, "poa_small.zip")
 
 ## ---- message = FALSE---------------------------------------------------------
-  sao_gps <- gtfs2gps("sao_small.zip", spatial_resolution = 50)
-  head(sao_gps)
+  poa_gps <- gtfs2gps("poa_small.zip", spatial_resolution = 50)
+  head(poa_gps)
 
 ## ---- message = FALSE---------------------------------------------------------
-  sao_gps60 <- sao_gps[1:100, ]
+  poa_gps60 <- poa_gps[1:100, ]
   
   # points
-  sao_gps60_sfpoints <- gps_as_sfpoints(sao_gps60)
+  poa_gps60_sfpoints <- gps_as_sfpoints(poa_gps60)
   
   # linestring
-  sao_gps60_sflinestring <- gps_as_sflinestring(sao_gps60)
+  poa_gps60_sflinestring <- gps_as_sflinestring(poa_gps60)
 
   # plot
-  plot(sf::st_geometry(sao_gps60_sfpoints), pch = 20)
-  plot(sf::st_geometry(sao_gps60_sflinestring), col = "blue", add = TRUE)
+  plot(sf::st_geometry(poa_gps60_sfpoints), pch = 20)
+  plot(sf::st_geometry(poa_gps60_sflinestring), col = "blue", add = TRUE)
   box()
 
 ## ---- message = FALSE---------------------------------------------------------
