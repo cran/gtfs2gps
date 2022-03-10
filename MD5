@@ -1,7 +1,7 @@
-c86e18b08f88cdc4d9509f2fbe88493e *DESCRIPTION
+0b64f7177fe91b2251c2e711d2125df3 *DESCRIPTION
 c2a13c1a67d0e492b6faec2ec4ebeabb *LICENSE
 7d75233f4911fcb2d09f57ff1cccbf90 *NAMESPACE
-cd24b8f0a0ee0bd6c3a13d6b94d6a0b9 *NEWS.md
+76f5361d651b882b5a0e3617e7d99d1a *NEWS.md
 7c05e8f0cfbb35551af550bc14178a16 *R/RcppExports.R
 9c9db1fce2762054099a9721c14e2410 *R/adjust_arrival_departure.R
 19104b376113021fc913a305ecb7530c *R/adjust_speed.R
@@ -24,9 +24,9 @@ a0a2e1d0c2d356e99b7280f9fb73052d *build/vignette.rds
 ddfede7a9b38e67a2dd740db9dd1cd09 *demo/fortaleza.R
 cb34e93dfd7ca7a442ebde7468acabbc *demo/poa.R
 26fb1aaf047148d84936db5d48d44ae2 *demo/sp.R
-305466fa8f35696a0530932cf9f24c09 *inst/doc/intro_to_gtfs2gps.R
-fc15da1031dc22259b9a479c3d21318a *inst/doc/intro_to_gtfs2gps.Rmd
-2436638669cd63ec9a308b2a2b3241dc *inst/doc/intro_to_gtfs2gps.html
+76f6c226b96bf5b3efc6206c3c8d2465 *inst/doc/intro_to_gtfs2gps.R
+352384e4b4e5c1da300560adbfa0374e *inst/doc/intro_to_gtfs2gps.Rmd
+0538614e232c71039314361bd720be84 *inst/doc/intro_to_gtfs2gps.html
 144411d12340cd6f9d54b896531ac091 *inst/extdata/berlin.zip
 422af363add7695bc74a054b240fbb4a *inst/extdata/fortaleza-srtm.tif
 ed5adabf8d5cd5b30c09e0cd14d2a2fd *inst/extdata/fortaleza.zip
@@ -38,6 +38,7 @@ e37ef832cbab16cb6dc8e59bd051fd51 *man/adjust_arrival_departure.Rd
 f0a0b939764ef53ace765612a059d821 *man/append_height.Rd
 7779594fc70b9cdbeb18cb366ca5539d *man/cpp_snap_points_nearest1.Rd
 ebe75bb5a85a5a372350e84f6b544cef *man/cpp_snap_points_nearest2.Rd
+e7023c8d4a2de27db0d23e3d1b2961a4 *man/figures/equation1.png
 48219fca1ec818a8f49f1fd7b04efc68 *man/figures/ipea_logo.png
 9f0cef8d63539bff71477691f7805328 *man/figures/logo.png
 8c345b6882f3dcdd7f90bfda2b4cee18 *man/figures/poa.jpg
@@ -86,10 +87,6 @@ ae410020c91dfb885f20830ecd279ce7 *tests/testthat/test_gtfs2gps.R
 bd1a7c5455a757e34617d5c90f91dab3 *tests/testthat/test_snap_points.R
 2548f0d184e1a998df7c50febea96ce5 *tests/testthat/test_test_gtfs_freq.R
 6e9171aba9ed9edb27caeac55b3e5d4a *tests/testthat/test_write_gtfs.R
-fc15da1031dc22259b9a479c3d21318a *vignettes/intro_to_gtfs2gps.Rmd
-5fea8894be16392a1612ffd35a5364fd *vignettes/intro_to_gtfs2gps_files/figure-gfm/poa_small_shapes_sf-1.png
-8beced646509f11f1c6505f572b7445b *vignettes/intro_to_gtfs2gps_files/figure-gfm/unnamed-chunk-6-1.png
-6f495878e798c2bc316d6e229ea50902 *vignettes/intro_to_gtfs2gps_files/figure-gfm/unnamed-chunk-7-1.png
+352384e4b4e5c1da300560adbfa0374e *vignettes/intro_to_gtfs2gps.Rmd
 148641536fdf0b2ffb971433a44379cf *vignettes/sao_small-DESKTOP-V07AVEN.zip
 015cf344d69f66767c11a98f17494103 *vignettes/sao_small.zip
-cc272436ac39ac5cb3419df533fce528 *vignettes/speed.png

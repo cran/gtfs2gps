@@ -1,3 +1,9 @@
+## ---- include = FALSE---------------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
 ## ---- eval = FALSE------------------------------------------------------------
 #  install.packages("gtfs2gps")
 
@@ -52,6 +58,9 @@ plot(sf::st_geometry(poa_gps_sflinestrig[1:200,]))
 
 box()
 
+## ----equation, echo = FALSE, message = FALSE----------------------------------
+knitr::include_graphics("https://github.com/ipeaGIT/gtfs2gps/blob/master/man/figures/equation1.png?raw=true")
+
 ## ----speed, echo = FALSE, message = FALSE-------------------------------------
-knitr::include_graphics("https://github.com/ipeaGIT/gtfs2gps/blob/master/man/figures/speed.PNG")
+knitr::include_graphics("https://github.com/ipeaGIT/gtfs2gps/blob/master/man/figures/speed.PNG?raw=true")
 
