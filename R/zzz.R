@@ -9,14 +9,20 @@ utils::globalVariables(c(".", "%>%", ":="))
   data.table::setDTthreads(percent = 100) # nocov
 }
 
-#' @importFrom magrittr %>%
+.onAttach <- function(lib, pkg){
+  message <- paste0(
+    sprintf("gtfs2gps version %s is now loaded\n",utils::packageDescription("gtfs2gps")$Version),
+    "NOTE: All filter functions from gtfs2gps were removed\n",
+    "Please replace them by similar functions from gtfstools")
+
+  packageStartupMessage(message)
+}
+
 #' @importFrom data.table := %between% fifelse %chin%
 #' @importFrom stats na.omit
 #' @importFrom utils head tail object.size
 #' @importFrom Rcpp compileAttributes
 #' @importFrom lwgeom st_geod_length
-#' @importFrom readr write_rds
-#' @importFrom pbapply pblapply
 #' @useDynLib gtfs2gps, .registration = TRUE
 NULL
 
@@ -30,7 +36,7 @@ if(getRversion() >= "2.15.1") utils::globalVariables(
     'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
     'service_duration', 'headway_secs', 'number_of_departures',
     'cumtime', 'speed', 'i', 'route_type', 'trip_number', 'mdate',
-    '.I', 'interval_id', 'i.interval', '.SD', 'grp', '.GRP',
+    '.I', 'interval_id', 'i.interval', '.SD', 'grp', '.GRP','stopped_bus', 'weighted.mean',
     'N_intervals', 'as.ITime', 'from_stop_id', 'from_timestamp', 'i.from_stop_id',
     'i.from_timestamp', 'i.interval_status', 'i.shape_id', 'i.to_stop_id',
     'i.to_timestamp', 'interval_status', 'numbers', 'to_timestamp',

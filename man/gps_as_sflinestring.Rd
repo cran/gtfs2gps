@@ -4,12 +4,10 @@
 \alias{gps_as_sflinestring}
 \title{Converts a GPS-like data.table to a LineString Simple Feature (sf) object}
 \usage{
-gps_as_sflinestring(gps, crs = 4326)
+gps_as_sflinestring(gps)
 }
 \arguments{
 \item{gps}{A data.table with timestamp data.}
-
-\item{crs}{A Coordinate Reference System. The default value is 4326 (latlong WGS84).}
 }
 \value{
 A simple feature (sf) object with LineString data.
@@ -21,10 +19,10 @@ Every interval of GPS data points between stops for each trip_id is
 }
 \examples{
 library(gtfs2gps)
-library(dplyr)
+library(magrittr)
 
 poa <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps"))
-poa_subset <- filter_by_shape_id(poa, c("T2-1", "A141-1")) \%>\%
+poa_subset <- gtfstools::filter_by_shape_id(poa, c("T2-1", "A141-1")) \%>\%
   filter_single_trip()
 
 poa_gps <- gtfs2gps(poa_subset)

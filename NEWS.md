@@ -1,9 +1,29 @@
 # log history of gtfs2gps package development
 
+# gtfs2gps v2.1-0
+* Major changes
+  * Filter functions were removed from the package because gtftools alredy implements them
+  * Function `gtfs2gps` now uses `parallel = TRUE` by default.
+  * Function `gtfs2gps` now uses `gtfstools::frequencies_to_stop_times()` to convert. frequency-based GTFS feeds to stop times before processing the data.
+
+* Minor changes
+  * New argument `quiet` to `gtfs2gps()`
+  * Removed `readr`, `pbapply`, `lwgeom` and `magrittr` from package dependencies.
+
+
+# gtfs2gps v2.0-3
+* Minor changes
+  * Saving units when using argument `filepath` in `gtfs2gps()`.
+
 # gtfs2gps v2.0-1
+
+* Major changes
+  * Imports `gtfstools` package.
 
 * Minor changes
   * Fixing CRAN error and warning related to the vignette.
+  * The function `adjust_speed()` now does not change very low speed (1.000000e-12 [km/h]) because these values indicate a situation of a stopped vehicle. Closed [249](https://github.com/ipeaGIT/gtfs2gps/issues/249).
+
 
 # gtfs2gps v2.0-1
 
