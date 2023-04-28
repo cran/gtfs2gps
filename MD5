@@ -1,4 +1,4 @@
-b6ab39556038582d3bfae999b8983dc8 *DESCRIPTION
+b653094e4b4c05712d639e4d7b2e4ddc *DESCRIPTION
 c2a13c1a67d0e492b6faec2ec4ebeabb *LICENSE
 d4114e9a943a68bb9e4a91010da67f63 *NAMESPACE
 ce6ca31d5ab94dfa56af8582604b01d8 *NEWS.md
@@ -18,14 +18,14 @@ aab0f0a5614cddd6e120853e19ae5e5a *R/test_gtfs_freq.R
 c6439dbbc20a0fe3bf30b90ed1579540 *R/utils.R
 0b72b59c1a5684d256d74e50b6b95384 *R/write_gtfs.R
 b4b8980430338e19b706415c71ae2741 *R/zzz.R
-2c6dcec347a08373685394abd7073985 *build/vignette.rds
+ab90564737a126d7d8c5eb4b65f9190e *build/vignette.rds
 72ea3553935f0681128cc7eff201c295 *demo/00Index
 2b650eb98a5c0ede83003274b5609a42 *demo/fortaleza.R
 e88a160475ba3be3b3040209a867d365 *demo/poa.R
 88b80bdf149937940a5279b4482c872e *demo/sp.R
 36cf1760962b0050d53670dab646919a *inst/doc/intro_to_gtfs2gps.R
 cc4449e38910862de186e8aec29206db *inst/doc/intro_to_gtfs2gps.Rmd
-c17886a4c92ca21cf9e644812856df28 *inst/doc/intro_to_gtfs2gps.html
+1ecbf370fe5dd6a2c8113f371501b967 *inst/doc/intro_to_gtfs2gps.html
 144411d12340cd6f9d54b896531ac091 *inst/extdata/berlin.zip
 422af363add7695bc74a054b240fbb4a *inst/extdata/fortaleza-srtm.tif
 ed5adabf8d5cd5b30c09e0cd14d2a2fd *inst/extdata/fortaleza.zip
@@ -66,7 +66,7 @@ ac597f0169551039e33bbbbadf1f70d3 *tests/testthat.R
 3a735df8021cd0168169a7b6f136b732 *tests/testthat/test_filter_gtfs.R
 b0e7fc63a464219f7f7bc743f9c4cc80 *tests/testthat/test_gps_as_sflinestring.R
 d0724d44edc7003848b82fbff7700108 *tests/testthat/test_gps_as_sfpoints.R
-e47867a36def2607cc8911c96cdec6e3 *tests/testthat/test_gtfs2gps.R
+57f889072d596b21c0244968c39316ad *tests/testthat/test_gtfs2gps.R
 65a04727580fdc47df0402db12d8df16 *tests/testthat/test_gtfs_as_sf.R
 694800c380ba67c3312d49d152ee9c0f *tests/testthat/test_read_gtfs.R
 3476b66810f8d999980132d47db942cb *tests/testthat/test_simplify_shapes.R
