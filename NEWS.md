@@ -1,6 +1,14 @@
 # log history of gtfs2gps package development
 
-# gtfs2gps v2.1-0
+# gtfs2gps v2.1-2
+
+* Minor changes
+  * puts package back on CRAN
+  * remove {magrittr} from Suggests
+  * Clarifies in the documentation the default behavior of the parameter `ncores`. closes #271. When `parallel = FALSE`, this argument is ignored. When `parallel = TRUE`, then by default the function uses all available cores minus one.
+
+# gtfs2gps v2.1-1
+
 * Major changes
   * Filter functions were removed from the package because gtftools alredy implements them
   * Function `gtfs2gps` now uses `parallel = TRUE` by default.
@@ -12,6 +20,7 @@
 
 
 # gtfs2gps v2.0-3
+
 * Minor changes
   * Saving units when using argument `filepath` in `gtfs2gps()`.
 
@@ -32,9 +41,8 @@
   * Fixing small bugs in the output of gtfs2gps().
 
 
-
-
 # gtfs2gps v2.0-0
+
 * Major changes
   * `gtfs2gps()` now creates two points for a stop when arrival and departure exist. Speed and travel time are now calculated considering both departure_ and arrival_time columns.
   * The travel statistics in the output table (speed, dist, cumdist, cumtime) for a given point are now calculated in relation to the previous point. More details in the documentation of the `gtfs2gps()` function.
@@ -45,12 +53,11 @@
 
 
 
-
 # gtfs2gps v1.5-4
+
 * Major changes
   * Fixed CRAN bugs
   * Fixed small bug that prevented creating departure times correctly
-
 
 
 # gtfs2gps v1.5
@@ -135,7 +142,7 @@
 * Minor changes
   * Removing bugs found by CRAN automatic tests
 
--------------------------------------------------------
+
 # gtfs2gps v1.0-5
 
 * Launch of **gtfs2gps** v1.0-5 on [CRAN](https://CRAN.R-project.org/package=gtfs2gps) on 2020-03-16

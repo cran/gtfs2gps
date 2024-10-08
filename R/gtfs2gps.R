@@ -21,8 +21,9 @@
 #' strategy "multisession" internally.
 #' Note that it is possible to create your own plan before calling gtfs2gps().
 #' In this case, do not use this argument.
-#' @param ncores Number of cores to be used in parallel execution. If parallel is
-# FALSE then this argument is ignored.
+#' @param ncores Number of cores to be used in parallel execution. When 
+#'        `parallel = FALSE`, this argument is ignored. When `parallel = TRUE`,
+#'        then by default the function uses all available cores minus one.
 #' @param strategy This argument is deprecated. Please use argument plan instead or
 #' use future::plan() directly.
 #' @param filepath Output file path. As default, the output is returned when gtfs2gps finishes.
@@ -89,10 +90,9 @@
 #' @export
 #' @examples
 #' library(gtfs2gps)
-#' library(magrittr)
 #' 
-#' gtfs <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps")) %>%
-#'   gtfstools::filter_by_shape_id("T2-1") %>%
+#' gtfs <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps")) |>
+#'   gtfstools::filter_by_shape_id("T2-1") |>
 #'   filter_single_trip()
 #'   
 #' poa_gps <- progressr::with_progress(gtfs2gps(gtfs, quiet=TRUE))

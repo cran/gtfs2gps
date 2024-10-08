@@ -34,7 +34,9 @@ strategy "multisession" internally.
 Note that it is possible to create your own plan before calling gtfs2gps().
 In this case, do not use this argument.}
 
-\item{ncores}{Number of cores to be used in parallel execution. If parallel is}
+\item{ncores}{Number of cores to be used in parallel execution. When 
+`parallel = FALSE`, this argument is ignored. When `parallel = TRUE`,
+then by default the function uses all available cores minus one.}
 
 \item{strategy}{This argument is deprecated. Please use argument plan instead or
 use future::plan() directly.}
@@ -117,10 +119,9 @@ To avoid division by zero, the minimum speed of vehicles in the output is
 }
 \examples{
 library(gtfs2gps)
-library(magrittr)
 
-gtfs <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps")) \%>\%
-  gtfstools::filter_by_shape_id("T2-1") \%>\%
+gtfs <- read_gtfs(system.file("extdata/poa.zip", package = "gtfs2gps")) |>
+  gtfstools::filter_by_shape_id("T2-1") |>
   filter_single_trip()
   
 poa_gps <- progressr::with_progress(gtfs2gps(gtfs, quiet=TRUE))
